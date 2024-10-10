@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check USDT Blacklist</title>
+</head>
+<body>
+    <h1>Check if Address is Blacklisted in TRON USDT</h1>
+    <form id="blacklist-form">
+        <label for="address">Enter TRON Address:</label>
+        <input type="text" id="address" name="address" required>
+        <button type="submit">Check</button>
+    </form>
+    <div id="result"></div>
+
+    <!-- 引入 tronweb.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tronweb@4.0.0/dist/TronWeb.min.js"></script>
+
+    <script>
+        const USDT_CONTRACT_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // TRON 上 USDT 的合约地址
+        const TRON_PRO_API_KEY = '57f1e973-8ffb-46a3-b482-e408ceb0e879';
+
+        const tronWeb = new TronWeb({
+            fullHost: 'https://api.trongrid.io',
+            headers: { 'TRON-PRO-API-KEY': TRON_PRO_API_KEY },
+			privateKey:'01'
+        });
+
+        document.getElementById('blacklist-form').addEventListener('submit', async function (event) {
+            event.preventDefault(); // 阻止默认提交行为
+
+            const address = document.getElementById('address').value.trim(); // 获取用户输入的地址
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Checking...';
+
+            // 验证地址格式
+            if (!tronWeb.isAddress(address)) {
+                resultDiv.textContent = 'Invalid TRON address format';
+                return;
+            }
+
+            try {
+                // 获取 USDT 合约实例
+                const contract = await tronWeb.contract().at(USDT_CONTRACT_ADDRESS);
+
+                // 调用 getBlackListStatus 方法，只传入要检查的地址
+                const isBlacklisted = await contract.getBlackListStatus(address).call();
+
+                // 输出结果
+                if (isBlacklisted) {
+                    resultDiv.textContent = `The address ${address} is blacklisted.`;
+                } else {
+                    resultDiv.textContent = `The address ${address} is not blacklisted.`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.textContent = `There was an error checking the blacklist status: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
